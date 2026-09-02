@@ -186,6 +186,41 @@ canvas#wave{display:block; width:100%; height:104px}
 .cut .br{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ok); white-space:nowrap}
 .tag{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--warn); border:1px solid rgba(255,176,58,.3); background:rgba(255,176,58,.08); padding:1px 6px; border-radius:5px}
 
+/* ---------- envio do vídeo ---------- */
+.upload{display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:18px; align-items:start}
+@media (max-width:860px){ .upload{grid-template-columns:1fr} }
+.dz{
+  border:1.5px dashed var(--line); border-radius:var(--r-sm); padding:26px 20px; text-align:center;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.012) 0 8px,transparent 8px 16px);
+  transition:border-color .15s ease, background .15s ease; display:flex; flex-direction:column; gap:9px; align-items:center;
+}
+.dz.hot{border-color:var(--accent); background:var(--accent-wash)}
+.dz .ic{width:36px; height:36px; border-radius:10px; background:var(--accent-wash); border:1px solid rgba(255,232,26,.3); display:grid; place-items:center; color:var(--accent)}
+.dz b{font-size:14px}
+.dz small{color:var(--dim); font-size:11.5px}
+.dz .row{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:2px}
+.queue{display:flex; flex-direction:column; gap:7px}
+.qrow{
+  display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:11px; align-items:center;
+  border:1px solid var(--line-soft); border-radius:var(--r-sm); background:var(--panel2); padding:9px 11px;
+  text-align:left; width:100%; transition:border-color .14s ease, background .14s ease;
+}
+.qrow:hover{border-color:var(--line)}
+.qrow[aria-pressed="true"]{border-color:var(--accent); background:linear-gradient(90deg,var(--accent-wash),transparent 65%)}
+.qrow .th{
+  width:44px; height:44px; border-radius:6px; background:linear-gradient(150deg,#2b3346,#141924);
+  display:grid; place-items:center; color:var(--dim); font-size:9px; font-family:"IBM Plex Mono",monospace; flex:none;
+}
+.qrow .nm{min-width:0}
+.qrow .nm b{display:block; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.qrow .nm span{color:var(--dim); font-size:11px; font-family:"IBM Plex Mono",monospace}
+.st{font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:5px; white-space:nowrap}
+.st.edit{background:var(--accent-wash); color:var(--accent); border:1px solid rgba(255,232,26,.35)}
+.st.done{background:rgba(75,215,155,.1); color:var(--ok); border:1px solid rgba(75,215,155,.3)}
+.st.wait{background:var(--raise); color:var(--muted); border:1px solid var(--line)}
+.bar-mini{height:3px; border-radius:2px; background:var(--raise); overflow:hidden; margin-top:5px}
+.bar-mini i{display:block; height:100%; background:var(--accent)}
+
 /* ---------- conexão codex ---------- */
 .connect{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center}
 @media (max-width:520px){ .connect{grid-template-columns:1fr} }
@@ -353,7 +388,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
   <section class="intro">
     <div>
       <h1>Cortes que ninguém percebe.<br>Legendas que <em>nunca</em> encostam no rosto.</h1>
-      <p>Interface do editor antes de qualquer render: você conecta o Codex, escolhe o nível da edição, o estilo da legenda, marca as falas de destaque e aprova uma prévia curta. O vídeo cheio só sai depois do seu “pode ir”.</p>
+      <p>Interface do editor antes de qualquer render: você envia a gravação, conecta o Codex, escolhe o nível da edição, o estilo da legenda, marca as falas de destaque e aprova uma prévia curta. O vídeo cheio só sai depois do seu “pode ir”.</p>
     </div>
     <div class="stats">
       <div class="stat"><b>1:14,6</b><span>bruto</span></div>
@@ -363,12 +398,60 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
     </div>
   </section>
 
+
+  <section class="panel" id="panelUpload">
+    <div class="phead"><span class="step">01</span><h2>Enviar o vídeo</h2><span class="hint">MOV, MP4 ou MKV · o original nunca é alterado</span></div>
+    <div class="pbody">
+      <div class="upload">
+        <div class="dz" id="dz">
+          <span class="ic" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 12.5V3.5M9 3.5 5.5 7M9 3.5 12.5 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12v2.2c0 .4.4.8.9.8h10.2c.5 0 .9-.4.9-.8V12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          <b>Arraste a gravação para cá</b>
+          <small>vertical ou horizontal · até 4 GB · vários arquivos de uma vez</small>
+          <span class="row">
+            <button class="btn sm" id="btnPick">Escolher do computador</button>
+            <button class="btn ghost sm" id="btnFolder">Abrir pasta de gravações</button>
+          </span>
+          <input type="file" id="filePick" accept="video/*" multiple hidden>
+          <small style="margin-top:4px">Saída em <span class="mono" style="color:var(--muted)">/editados</span> · original guardado em <span class="mono" style="color:var(--muted)">/originais</span></small>
+        </div>
+        <div>
+          <div class="queue" id="queue">
+            <button class="qrow" aria-pressed="true">
+              <span class="th">1080×<br>1920</span>
+              <span class="nm"><b>REC_0412_high-ticket.mov</b><span>01:14,6 · 30fps · 412 MB</span>
+                <span class="bar-mini"><i style="width:100%"></i></span>
+              </span>
+              <span class="st edit">editando</span>
+            </button>
+            <button class="qrow" aria-pressed="false">
+              <span class="th">1080×<br>1920</span>
+              <span class="nm"><b>REC_0412_high-ticket_parte2.mov</b><span>00:39,8 · mesma gravação · entra depois pela fala</span>
+                <span class="bar-mini"><i style="width:0"></i></span>
+              </span>
+              <span class="st wait">na fila</span>
+            </button>
+            <button class="qrow" aria-pressed="false">
+              <span class="th">1080×<br>1920</span>
+              <span class="nm"><b>REC_0408_objecao_preco.mov</b><span>01:02,1 · editado em 28/ago</span>
+                <span class="bar-mini"><i style="width:100%; background:var(--ok)"></i></span>
+              </span>
+              <span class="st done">já editado</span>
+            </button>
+          </div>
+          <p style="color:var(--dim); font-size:11.5px; margin-top:10px">Arquivo já editado não é refeito sem você pedir. Quando dois arquivos são da mesma gravação, a ordem é decidida pela fala, não pelo horário do arquivo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="studio">
 
     <!-- ======= COLUNA ESQUERDA ======= -->
     <div>
       <section class="panel">
-        <div class="phead"><span class="step">04</span><h2>Prévia — 00:12,0 a 00:24,0</h2><span class="hint">quadro real 1080×1920 · zoom 18%</span></div>
+        <div class="phead"><span class="step">05</span><h2>Prévia — 00:12,0 a 00:24,0</h2><span class="hint">quadro real 1080×1920 · zoom 18%</span></div>
         <div class="stage">
           <div class="phone" id="phone">
             <svg class="scene" viewBox="0 0 90 160" preserveAspectRatio="xMidYMid slice" aria-label="Enquadramento vertical com Ricardo falando">
@@ -449,7 +532,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel">
-        <div class="phead"><span class="step">09</span><h2>Áudio</h2><span class="hint">a voz manda</span></div>
+        <div class="phead"><span class="step">10</span><h2>Áudio</h2><span class="hint">a voz manda</span></div>
         <div class="pbody">
           <div class="slider-row" style="margin-top:0">
             <div class="mini"><span>loudness</span><b>-14 LUFS</b></div>
@@ -464,7 +547,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
     <!-- ======= COLUNA DIREITA ======= -->
     <div>
       <section class="panel">
-        <div class="phead"><span class="step">01</span><h2>Conectar o seu Codex</h2><span class="hint">obrigatório</span></div>
+        <div class="phead"><span class="step">02</span><h2>Conectar o seu Codex</h2><span class="hint">obrigatório</span></div>
         <div class="pbody">
           <div class="connect">
             <div class="field mono"><label for="key">Chave</label><input id="key" type="password" value="sk-codex-••••••••••••••••4b7a" aria-label="Chave do Codex"></div>
@@ -483,7 +566,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel">
-        <div class="phead"><span class="step">02</span><h2>Nível da edição</h2><span class="hint">muda o que o app monta</span></div>
+        <div class="phead"><span class="step">03</span><h2>Nível da edição</h2><span class="hint">muda o que o app monta</span></div>
         <div class="pbody">
           <div class="modes" id="modes">
             <button class="mode" data-mode="simples" aria-pressed="false">
@@ -506,7 +589,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel">
-        <div class="phead"><span class="step">03</span><h2>Hook e headline</h2><span class="hint">método IG</span></div>
+        <div class="phead"><span class="step">04</span><h2>Hook e headline</h2><span class="hint">método IG</span></div>
         <div class="pbody">
           <div class="seg" id="hlSeg">
             <button aria-pressed="true" data-hl="app">O app escreve</button>
@@ -527,7 +610,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel">
-        <div class="phead"><span class="step">05</span><h2>Estilo da legenda</h2><span class="hint">4 opções · clique para ver no quadro</span></div>
+        <div class="phead"><span class="step">06</span><h2>Estilo da legenda</h2><span class="hint">4 opções · clique para ver no quadro</span></div>
         <div class="pbody">
           <div class="caps" id="caps">
             <button class="capopt" data-style="s-classico" aria-pressed="true">
@@ -557,7 +640,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel">
-        <div class="phead"><span class="step">06</span><h2>Falas de destaque</h2><span class="hint">o que precisa ficar</span></div>
+        <div class="phead"><span class="step">07</span><h2>Falas de destaque</h2><span class="hint">o que precisa ficar</span></div>
         <div class="pbody">
           <div class="chips" id="chips">
             <span class="chip">high ticket <span class="mono">00:12,4</span><button aria-label="remover">×</button></span>
@@ -571,7 +654,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel" id="panelImg">
-        <div class="phead"><span class="step">07</span><h2>Imagens</h2><span class="hint" id="imgHint">modo Médio e Hard</span></div>
+        <div class="phead"><span class="step">08</span><h2>Imagens</h2><span class="hint" id="imgHint">modo Médio e Hard</span></div>
         <div class="pbody">
           <div class="tabs" id="imgTabs">
             <button class="tab" aria-selected="true" data-tab="upload">Enviar a minha</button>
@@ -592,7 +675,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel" id="panelSplit">
-        <div class="phead"><span class="step">08</span><h2>Tela dividida</h2><span class="hint" id="splitHint">só no modo Hard</span></div>
+        <div class="phead"><span class="step">09</span><h2>Tela dividida</h2><span class="hint" id="splitHint">só no modo Hard</span></div>
         <div class="pbody">
           <div class="drop"><b>Envie o vídeo ou a imagem da divisão</b><small>o app abre a tela quando o assunto muda</small></div>
           <div class="slider-row">
@@ -609,7 +692,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
 
   <div class="wide">
     <section class="panel">
-      <div class="phead"><span class="step">10</span><h2>Checklist antes de exportar</h2><span class="hint" style="color:var(--warn)">12 de 13 · 1 pendente</span></div>
+      <div class="phead"><span class="step">11</span><h2>Checklist antes de exportar</h2><span class="hint" style="color:var(--warn)">12 de 13 · 1 pendente</span></div>
       <div class="pbody">
         <div class="check">
           <div class="ck"><i>✓</i>Palavra anterior completa</div>
@@ -631,7 +714,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
 
     <div>
       <section class="panel">
-        <div class="phead"><span class="step">11</span><h2>Custo deste vídeo</h2><span class="hint">1 revisão</span></div>
+        <div class="phead"><span class="step">12</span><h2>Custo deste vídeo</h2><span class="hint">1 revisão</span></div>
         <div class="pbody">
           <table class="cost">
             <thead><tr><th>Item</th><th style="text-align:right">Valor</th></tr></thead>
@@ -649,7 +732,7 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
       </section>
 
       <section class="panel">
-        <div class="phead"><span class="step">12</span><h2>Memória de aprovações</h2><span class="hint">não apaga</span></div>
+        <div class="phead"><span class="step">13</span><h2>Memória de aprovações</h2><span class="hint">não apaga</span></div>
         <div class="pbody">
           <div class="mem">
             <div class="ok"><b>ok</b><span>Legenda amarela 68px, contorno 4px, altura do peito — aprovado em 12/ago</span></div>
@@ -709,6 +792,44 @@ footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14
     var m = Math.floor(s/60), r = s - m*60;
     return (m<10?"0":"")+m+":"+(r<10?"0":"")+r.toFixed(2).replace(".",",");
   }
+
+
+  /* ---------- envio do vídeo ---------- */
+  var dz = document.getElementById("dz");
+  var pick = document.getElementById("filePick");
+  var queue = document.getElementById("queue");
+  function selectRow(row){
+    Array.prototype.forEach.call(queue.children, function(c){ c.setAttribute("aria-pressed","false"); });
+    row.setAttribute("aria-pressed","true");
+  }
+  queue.addEventListener("click", function(e){
+    var r = e.target.closest(".qrow"); if(!r) return;
+    selectRow(r);
+  });
+  function addFile(name){
+    var row = document.createElement("button");
+    row.className = "qrow";
+    row.setAttribute("aria-pressed","false");
+    row.innerHTML = '<span class="th">1080×<br>1920</span><span class="nm"><b></b><span>lendo o arquivo…</span>' +
+      '<span class="bar-mini"><i style="width:28%"></i></span></span><span class="st wait">na fila</span>';
+    row.querySelector("b").textContent = name;
+    queue.appendChild(row);
+  }
+  document.getElementById("btnPick").addEventListener("click", function(){ pick.click(); });
+  document.getElementById("btnFolder").addEventListener("click", function(){ pick.click(); });
+  pick.addEventListener("change", function(){
+    Array.prototype.forEach.call(pick.files, function(f){ addFile(f.name); });
+  });
+  ["dragenter","dragover"].forEach(function(ev){
+    dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add("hot"); });
+  });
+  ["dragleave","drop"].forEach(function(ev){
+    dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove("hot"); });
+  });
+  dz.addEventListener("drop", function(e){
+    var fl = e.dataTransfer && e.dataTransfer.files;
+    if (fl) Array.prototype.forEach.call(fl, function(f){ addFile(f.name); });
+  });
 
   /* ---------- lista de cortes ---------- */
   var box = document.getElementById("cuts");
