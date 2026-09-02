@@ -1,0 +1,847 @@
+<title>Corte Limpo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ink:#0B0D12; --panel:#12151D; --panel2:#171B26; --raise:#1E2331;
+  --line:#252B3B; --line-soft:#1B2130;
+  --text:#E9EBF3; --muted:#8C94A9; --dim:#5B6376;
+  --accent:#FFE81A; --accent-ink:#0B0D12; --accent-wash:rgba(255,232,26,.12);
+  --ok:#4BD79B; --warn:#FFB03A; --bad:#FF6274;
+  --cap:#FFFF00;
+  --r:14px; --r-sm:9px;
+  --shadow:0 18px 44px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ink); color:var(--text);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  font-size:14px; line-height:1.5;
+  background-image:
+    radial-gradient(900px 520px at 12% -8%, rgba(255,232,26,.055), transparent 62%),
+    radial-gradient(760px 460px at 96% 4%, rgba(80,110,255,.075), transparent 60%);
+  background-attachment:fixed;
+}
+h1,h2,h3{margin:0; text-wrap:balance}
+p{margin:0}
+button,input,textarea,select{font:inherit; color:inherit}
+button{cursor:pointer; background:none; border:0}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+[hidden]{display:none !important}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1320px; margin:0 auto; padding:0 20px 72px}
+header.bar{
+  position:sticky; top:0; z-index:40;
+  background:rgba(11,13,18,.82); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line-soft);
+}
+.bar-in{max-width:1320px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+.brand{display:flex; align-items:center; gap:11px}
+.mark{
+  width:30px; height:30px; border-radius:8px; background:var(--accent);
+  display:grid; place-items:center; color:var(--accent-ink); flex:none;
+  box-shadow:0 0 0 1px rgba(255,232,26,.35), 0 8px 20px rgba(255,232,26,.18);
+}
+.brand b{font-family:"Archivo Black",Impact,sans-serif; font-size:16px; letter-spacing:-.01em; font-weight:400}
+.brand span{color:var(--dim); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-top:-2px}
+.file{
+  display:flex; align-items:center; gap:9px; padding:6px 11px; border:1px solid var(--line);
+  border-radius:999px; background:var(--panel); color:var(--muted); font-size:12.5px;
+}
+.dot{width:6px; height:6px; border-radius:50%; background:var(--ok); flex:none; box-shadow:0 0 0 3px rgba(75,215,155,.15)}
+.bar-right{margin-left:auto; display:flex; align-items:center; gap:10px}
+.pill{
+  display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border-radius:999px;
+  border:1px solid var(--line); background:var(--panel); font-size:12.5px; color:var(--muted);
+}
+.pill.on{border-color:rgba(75,215,155,.4); color:var(--ok); background:rgba(75,215,155,.08)}
+.btn{
+  padding:9px 16px; border-radius:10px; background:var(--accent); color:var(--accent-ink);
+  font-weight:600; font-size:13px; border:1px solid rgba(255,232,26,.5);
+  transition:transform .12s ease, filter .12s ease;
+}
+.btn:hover{filter:brightness(1.08); transform:translateY(-1px)}
+.btn.ghost{background:transparent; color:var(--text); border-color:var(--line)}
+.btn.ghost:hover{background:var(--panel2); filter:none}
+.btn.sm{padding:6px 11px; font-size:12px; border-radius:8px}
+
+/* ---------- headline strip ---------- */
+.intro{padding:34px 0 24px; display:grid; gap:14px; grid-template-columns:minmax(0,1fr) auto; align-items:end}
+.intro h1{font-family:"Archivo Black",Impact,sans-serif; font-weight:400; font-size:clamp(28px,4.2vw,44px); letter-spacing:-.02em; line-height:1.02}
+.intro h1 em{font-style:normal; color:var(--accent)}
+.intro p{color:var(--muted); max-width:60ch; margin-top:10px}
+.stats{display:flex; gap:26px; align-items:flex-end}
+.stat b{display:block; font-family:"IBM Plex Mono",monospace; font-size:22px; font-weight:600; letter-spacing:-.02em}
+.stat span{color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.12em}
+
+/* ---------- grid ---------- */
+.studio{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); gap:20px; align-items:start}
+@media (max-width:1040px){ .studio{grid-template-columns:minmax(0,1fr)} .intro{grid-template-columns:1fr} }
+
+.panel{background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--r)}
+.panel + .panel{margin-top:20px}
+.phead{display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid var(--line-soft)}
+.phead h2{font-size:13.5px; font-weight:600; letter-spacing:.01em}
+.step{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--dim);
+  border:1px solid var(--line); border-radius:6px; padding:1px 6px; flex:none;
+}
+.phead .hint{margin-left:auto; color:var(--dim); font-size:11.5px}
+.pbody{padding:16px}
+
+/* ---------- preview ---------- */
+.stage{display:grid; grid-template-columns:auto minmax(0,1fr); gap:20px; padding:18px}
+@media (max-width:620px){ .stage{grid-template-columns:1fr} }
+.phone{
+  position:relative; width:264px; aspect-ratio:9/16; border-radius:20px; overflow:hidden;
+  border:1px solid var(--line); background:#0d1017; container-type:inline-size;
+  box-shadow:var(--shadow);
+}
+.phone svg.scene{position:absolute; inset:0; width:100%; height:100%; display:block}
+.safe{
+  position:absolute; left:6%; right:6%; top:8%; height:47%;
+  border:1px dashed rgba(75,215,155,.55); border-radius:8px;
+}
+.safe::after{
+  content:"rosto travado · 0.96"; position:absolute; top:-9px; left:8px;
+  background:rgba(11,13,18,.9); color:var(--ok); font-size:8.5px; padding:1px 5px; border-radius:4px;
+  font-family:"IBM Plex Mono",monospace; border:1px solid rgba(75,215,155,.3);
+}
+.tick{position:absolute; width:9px; height:9px; border:1.5px solid var(--ok); opacity:.9}
+.headline-ov{
+  position:absolute; left:7%; right:7%; top:5.5%;
+  font-family:"Archivo Black",Impact,sans-serif; font-weight:400;
+  font-size:5.4cqw; line-height:1.12; text-align:center; letter-spacing:-.01em;
+  color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.7);
+  transition:opacity .2s ease;
+}
+.headline-ov u{text-decoration:none; color:var(--accent); box-shadow:inset 0 -.35em rgba(255,232,26,.16)}
+.cap{
+  position:absolute; left:5%; right:5%; bottom:23%; text-align:center;
+  font-family:Arial,Helvetica,sans-serif; font-weight:700;
+  font-size:6.3cqw; line-height:1.15; letter-spacing:.01em; transition:bottom .25s ease;
+}
+.cap .w{display:inline-block; margin:0 .12em}
+/* estilos de legenda */
+.cap.s-classico{color:var(--cap); text-shadow:
+  -1.4cqw 0 #000, 1.4cqw 0 #000, 0 -1.4cqw #000, 0 1.4cqw #000,
+  -1cqw -1cqw #000, 1cqw -1cqw #000, -1cqw 1cqw #000, 1cqw 1cqw #000}
+.cap.s-karaoke{color:#fff; text-shadow:-.9cqw 0 #000,.9cqw 0 #000,0 -.9cqw #000,0 .9cqw #000,-.7cqw -.7cqw #000,.7cqw .7cqw #000}
+.cap.s-karaoke .w.on{color:var(--cap); transform:scale(1.06)}
+.cap.s-bloco{color:#fff; text-transform:uppercase; font-size:5.6cqw; letter-spacing:-.01em}
+.cap.s-bloco .w{background:#000; padding:.04em .22em; margin:0 .06em; border-radius:2px}
+.cap.s-bloco .w.on{background:var(--cap); color:#000}
+.cap.s-limpo{color:#fff; font-weight:600; font-size:5.2cqw; text-shadow:0 .25cqw .8cqw rgba(0,0,0,.85)}
+.cap.s-limpo .w.on{color:var(--cap)}
+.overlay-img{
+  position:absolute; right:6%; top:55%; width:34%; aspect-ratio:4/5; border-radius:8px;
+  border:1px solid rgba(255,255,255,.22); overflow:hidden; box-shadow:0 12px 26px rgba(0,0,0,.5);
+  background:linear-gradient(160deg,#2a3244,#131824);
+  display:grid; place-items:center; color:var(--muted); font-size:8px; text-align:center; padding:6px;
+  font-family:"IBM Plex Mono",monospace;
+}
+.split-band{
+  position:absolute; left:0; right:0; top:0; height:38%; border-bottom:2px solid var(--accent);
+  background:repeating-linear-gradient(135deg,#1a2131 0 10px,#141a27 10px 20px);
+  display:grid; place-items:center; color:var(--muted); font-size:9px; font-family:"IBM Plex Mono",monospace;
+}
+.phone.mode-hard .cap{bottom:20%}
+.badge-frame{
+  position:absolute; left:8px; bottom:8px; display:flex; gap:6px; font-family:"IBM Plex Mono",monospace; font-size:8.5px;
+}
+.badge-frame span{background:rgba(11,13,18,.78); border:1px solid var(--line); color:var(--muted); padding:2px 6px; border-radius:5px}
+
+.stage-side{display:flex; flex-direction:column; gap:14px; min-width:0}
+.readout{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+.ro{border:1px solid var(--line-soft); border-radius:var(--r-sm); padding:9px 11px; background:var(--panel2)}
+.ro b{display:block; font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:600}
+.ro span{color:var(--dim); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em}
+.ro.good b{color:var(--ok)}
+
+/* ---------- timeline ---------- */
+.tl{padding:0 18px 18px}
+.tl-head{display:flex; align-items:center; gap:12px; margin-bottom:8px; color:var(--dim); font-size:11.5px}
+.legend{display:flex; gap:14px; margin-left:auto}
+.legend i{width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:5px; vertical-align:-1px}
+.wave-wrap{position:relative; border:1px solid var(--line-soft); border-radius:var(--r-sm); background:#0E1219; overflow:hidden}
+canvas#wave{display:block; width:100%; height:104px}
+.playhead{position:absolute; top:0; bottom:0; width:1.5px; background:var(--accent); box-shadow:0 0 10px rgba(255,232,26,.6)}
+.playhead::before{content:""; position:absolute; top:-1px; left:-4px; border:4.5px solid transparent; border-top-color:var(--accent)}
+.ruler{display:flex; justify-content:space-between; margin-top:6px; color:var(--dim); font-size:10.5px}
+.cuts{margin-top:14px; display:flex; flex-direction:column; gap:6px}
+.cut{
+  display:grid; grid-template-columns:136px minmax(0,1fr) auto; gap:12px; align-items:center;
+  padding:9px 12px; border:1px solid var(--line-soft); border-radius:var(--r-sm);
+  background:var(--panel2); text-align:left; width:100%; transition:border-color .14s ease, background .14s ease;
+}
+.cut:hover{border-color:var(--line); background:var(--raise)}
+.cut[aria-pressed="true"]{border-color:rgba(255,232,26,.45); background:linear-gradient(90deg,var(--accent-wash),transparent 60%)}
+.cut .tc{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); white-space:nowrap}
+.cut .why{font-size:12.5px}
+.cut .why q{color:var(--dim); font-style:italic}
+.cut .br{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ok); white-space:nowrap}
+.tag{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--warn); border:1px solid rgba(255,176,58,.3); background:rgba(255,176,58,.08); padding:1px 6px; border-radius:5px}
+
+/* ---------- conexão codex ---------- */
+.connect{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center}
+@media (max-width:520px){ .connect{grid-template-columns:1fr} }
+.field{
+  display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--line);
+  border-radius:10px; padding:9px 12px;
+}
+.field label{color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.1em; flex:none}
+.field input, .field textarea, .field select{
+  background:none; border:0; outline:none; width:100%; font-size:13px;
+}
+.field.mono input{font-family:"IBM Plex Mono",monospace; letter-spacing:.06em}
+.conn-state{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; color:var(--muted); font-size:12px}
+.conn-state .mono{color:var(--text)}
+
+/* ---------- modos ---------- */
+.modes{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px}
+@media (max-width:640px){ .modes{grid-template-columns:1fr} }
+.mode{
+  border:1px solid var(--line-soft); background:var(--panel2); border-radius:var(--r-sm);
+  padding:13px; text-align:left; display:flex; flex-direction:column; gap:8px; min-height:100%;
+  transition:border-color .14s ease, background .14s ease, transform .14s ease;
+}
+.mode:hover{transform:translateY(-2px); border-color:var(--line)}
+.mode[aria-pressed="true"]{border-color:var(--accent); background:linear-gradient(180deg,var(--accent-wash),transparent 70%)}
+.mode h3{font-size:13.5px; display:flex; align-items:center; gap:8px}
+.mode h3 .lv{font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--dim)}
+.mode[aria-pressed="true"] h3 .lv{color:var(--accent)}
+.mode ul{margin:0; padding-left:15px; color:var(--muted); font-size:12px; display:flex; flex-direction:column; gap:3px}
+.mode ul li::marker{color:var(--dim)}
+.mode .need{margin-top:auto; font-size:11px; color:var(--warn)}
+
+/* ---------- legendas ---------- */
+.caps{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+@media (max-width:560px){ .caps{grid-template-columns:1fr} }
+.capopt{
+  border:1px solid var(--line-soft); border-radius:var(--r-sm); background:var(--panel2); overflow:hidden;
+  text-align:left; display:flex; flex-direction:column; transition:border-color .14s ease;
+}
+.capopt:hover{border-color:var(--line)}
+.capopt[aria-pressed="true"]{border-color:var(--accent)}
+.capopt .demo{
+  height:72px; display:grid; place-items:center; background:linear-gradient(165deg,#232a3a,#12161f);
+  border-bottom:1px solid var(--line-soft); position:relative;
+}
+.capopt .demo .cap{position:static; font-size:17px; text-shadow:-2px 0 #000,2px 0 #000,0 -2px #000,0 2px #000,-1.4px -1.4px #000,1.4px 1.4px #000}
+.capopt .demo .cap.s-bloco{font-size:15px}
+.capopt .demo .cap.s-limpo{font-size:15px; text-shadow:0 1px 4px rgba(0,0,0,.9)}
+.capopt .meta{padding:9px 11px; display:flex; flex-direction:column; gap:3px}
+.capopt .meta b{font-size:12.5px}
+.capopt .meta span{color:var(--dim); font-size:11px; font-family:"IBM Plex Mono",monospace}
+.capopt .flag{
+  position:absolute; top:7px; right:7px; font-size:9px; letter-spacing:.09em; text-transform:uppercase;
+  background:rgba(75,215,155,.15); color:var(--ok); border:1px solid rgba(75,215,155,.35);
+  padding:1px 6px; border-radius:5px;
+}
+.slider-row{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:12px}
+@media (max-width:560px){ .slider-row{grid-template-columns:1fr} }
+.mini{border:1px solid var(--line-soft); background:var(--panel2); border-radius:var(--r-sm); padding:9px 11px}
+.mini > span{display:block; color:var(--dim); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:5px}
+.mini b{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600}
+
+/* ---------- chips / destaques ---------- */
+.chips{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:11px}
+.chip{
+  display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px;
+  background:var(--accent-wash); border:1px solid rgba(255,232,26,.32); font-size:12.5px;
+}
+.chip .mono{color:var(--dim); font-size:11px}
+.chip button{color:var(--dim); font-size:14px; line-height:1}
+.chip button:hover{color:var(--bad)}
+.chip.muted{background:var(--panel2); border-color:var(--line-soft)}
+
+/* ---------- imagens ---------- */
+.tabs{display:flex; gap:4px; background:var(--panel2); padding:4px; border-radius:10px; border:1px solid var(--line-soft); width:fit-content}
+.tab{padding:6px 13px; border-radius:7px; font-size:12.5px; color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--raise); color:var(--text); box-shadow:inset 0 0 0 1px var(--line)}
+.drop{
+  margin-top:12px; border:1.5px dashed var(--line); border-radius:var(--r-sm); padding:20px; text-align:center;
+  color:var(--muted); background:repeating-linear-gradient(135deg,rgba(255,255,255,.012) 0 8px,transparent 8px 16px);
+}
+.drop b{display:block; color:var(--text); font-size:13px; margin-bottom:3px}
+.drop small{color:var(--dim)}
+.slots{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:12px}
+@media (max-width:560px){ .slots{grid-template-columns:1fr} }
+.slot{border:1px solid var(--line-soft); border-radius:var(--r-sm); background:var(--panel2); overflow:hidden}
+.slot .thumb{height:64px; background:linear-gradient(150deg,#2b3346,#141924); display:grid; place-items:center; color:var(--dim); font-size:10px; font-family:"IBM Plex Mono",monospace}
+.slot .thumb.gen{background:linear-gradient(150deg,#3a3320,#1a1712); color:var(--accent)}
+.slot .info{padding:8px 9px}
+.slot .info b{display:block; font-size:11.5px}
+.slot .info span{color:var(--dim); font-size:10.5px; font-family:"IBM Plex Mono",monospace}
+
+/* ---------- headline / hook ---------- */
+.seg{display:flex; gap:4px; background:var(--panel2); padding:4px; border-radius:10px; border:1px solid var(--line-soft); width:fit-content; margin-bottom:11px}
+.seg button{padding:6px 13px; border-radius:7px; font-size:12.5px; color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink); font-weight:600}
+.hook{border-left:2px solid var(--accent); padding:10px 0 10px 13px; margin-bottom:11px}
+.hook .lab{color:var(--accent); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em}
+.hook p{font-size:15px; margin-top:5px; font-weight:500}
+.alt{display:flex; flex-direction:column; gap:6px}
+.alt button{
+  border:1px solid var(--line-soft); background:var(--panel2); border-radius:var(--r-sm);
+  padding:9px 11px; text-align:left; font-size:12.5px; color:var(--muted); display:flex; gap:9px; align-items:center;
+}
+.alt button:hover{border-color:var(--line); color:var(--text)}
+.alt button .mono{color:var(--dim); font-size:11px; flex:none}
+
+/* ---------- checklist / custos / memória ---------- */
+.wide{margin-top:20px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:20px; align-items:start}
+@media (max-width:1040px){ .wide{grid-template-columns:1fr} }
+.check{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 18px}
+@media (max-width:560px){ .check{grid-template-columns:1fr} }
+.ck{display:flex; align-items:flex-start; gap:9px; padding:6px 0; font-size:12.5px; border-bottom:1px solid var(--line-soft)}
+.ck i{
+  width:15px; height:15px; border-radius:4px; flex:none; margin-top:2px; display:grid; place-items:center;
+  background:rgba(75,215,155,.14); color:var(--ok); border:1px solid rgba(75,215,155,.35); font-size:10px; font-style:normal;
+}
+.ck.pend i{background:rgba(255,176,58,.12); color:var(--warn); border-color:rgba(255,176,58,.35)}
+.ck.pend{color:var(--warn)}
+table.cost{width:100%; border-collapse:collapse; font-size:12.5px}
+table.cost th{text-align:left; color:var(--dim); font-weight:500; font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; padding:0 0 8px}
+table.cost td{padding:6px 0; border-top:1px solid var(--line-soft)}
+table.cost td:last-child{text-align:right; font-family:"IBM Plex Mono",monospace}
+table.cost tr.total td{border-top:1px solid var(--line); font-weight:600; padding-top:9px}
+table.cost tr.total td:last-child{color:var(--accent); font-size:14px}
+.mem{display:flex; flex-direction:column; gap:7px}
+.mem div{display:flex; gap:9px; align-items:flex-start; font-size:12.5px; color:var(--muted)}
+.mem div b{font-size:10px; letter-spacing:.09em; text-transform:uppercase; flex:none; padding:2px 7px; border-radius:5px; margin-top:1px}
+.mem .ok b{background:rgba(75,215,155,.12); color:var(--ok); border:1px solid rgba(75,215,155,.3)}
+.mem .no b{background:rgba(255,98,116,.1); color:var(--bad); border:1px solid rgba(255,98,116,.3)}
+
+/* ---------- ação final ---------- */
+.final{
+  margin-top:20px; border:1px solid var(--line); border-radius:var(--r); padding:18px 20px;
+  background:linear-gradient(120deg,rgba(255,232,26,.07),transparent 55%), var(--panel);
+  display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:center;
+}
+@media (max-width:640px){ .final{grid-template-columns:1fr} }
+.final h2{font-family:"Archivo Black",Impact,sans-serif; font-weight:400; font-size:19px; letter-spacing:-.01em}
+.final p{color:var(--muted); margin-top:6px; max-width:64ch}
+.final .actions{display:flex; gap:10px; flex-wrap:wrap}
+footer{margin-top:26px; color:var(--dim); font-size:11.5px; display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+</style>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 3.2h12M2 12.8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.6 8h4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.2" cy="8" r="1.5" fill="currentColor"/><circle cx="12.8" cy="8" r="1.5" fill="currentColor"/></svg>
+      </div>
+      <div><b>Corte Limpo</b><span>Estúdio Ricardo Castro</span></div>
+    </div>
+    <div class="file"><span class="dot"></span> REC_0412_high-ticket.mov <span class="mono" style="color:var(--dim)">01:14,6 · 1080×1920 · 30fps</span></div>
+    <div class="bar-right">
+      <span class="pill on" id="codexPill">● Codex conectado</span>
+      <button class="btn ghost sm">Salvar preset</button>
+      <button class="btn" id="btnPreview">Gerar prévia de 12s</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="intro">
+    <div>
+      <h1>Cortes que ninguém percebe.<br>Legendas que <em>nunca</em> encostam no rosto.</h1>
+      <p>Interface do editor antes de qualquer render: você conecta o Codex, escolhe o nível da edição, o estilo da legenda, marca as falas de destaque e aprova uma prévia curta. O vídeo cheio só sai depois do seu “pode ir”.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>1:14,6</b><span>bruto</span></div>
+      <div class="stat"><b style="color:var(--accent)">0:58,2</b><span>editado</span></div>
+      <div class="stat"><b>7</b><span>cortes</span></div>
+      <div class="stat"><b>0,15s</b><span>respiro</span></div>
+    </div>
+  </section>
+
+  <div class="studio">
+
+    <!-- ======= COLUNA ESQUERDA ======= -->
+    <div>
+      <section class="panel">
+        <div class="phead"><span class="step">04</span><h2>Prévia — 00:12,0 a 00:24,0</h2><span class="hint">quadro real 1080×1920 · zoom 18%</span></div>
+        <div class="stage">
+          <div class="phone" id="phone">
+            <svg class="scene" viewBox="0 0 90 160" preserveAspectRatio="xMidYMid slice" aria-label="Enquadramento vertical com Ricardo falando">
+              <defs>
+                <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#2a3145"/><stop offset="1" stop-color="#141a26"/>
+                </linearGradient>
+                <linearGradient id="sk" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#c99a76"/><stop offset="1" stop-color="#a97a58"/>
+                </linearGradient>
+                <radialGradient id="lamp" cx="0.3" cy="0.25" r="0.7">
+                  <stop offset="0" stop-color="#4a5878" stop-opacity="0.75"/><stop offset="1" stop-color="#4a5878" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <rect width="90" height="160" fill="url(#bg)"/>
+              <rect width="90" height="160" fill="url(#lamp)"/>
+              <rect x="6" y="96" width="78" height="64" rx="16" fill="#1d2a3f"/>
+              <rect x="14" y="104" width="62" height="56" rx="14" fill="#25344c"/>
+              <path d="M39 74h12v16H39z" fill="#b98a68"/>
+              <ellipse cx="45" cy="52" rx="17" ry="21" fill="url(#sk)"/>
+              <path d="M28 47c1-13 8-20 17-20s16 7 17 20c-3-6-8-9-17-9s-14 3-17 9z" fill="#2b2521"/>
+              <ellipse cx="38.5" cy="51" rx="1.7" ry="2" fill="#20242c"/>
+              <ellipse cx="51.5" cy="51" rx="1.7" ry="2" fill="#20242c"/>
+              <path d="M40 63q5 4 10 0" stroke="#7d4f3c" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+              <path d="M33 46q5-3 10 0M47 46q5-3 10 0" stroke="#2b2521" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+            </svg>
+            <div class="split-band" id="splitBand" hidden>tela dividida · gráfico_faturamento.mp4</div>
+            <div class="safe" id="safe">
+              <span class="tick" style="left:-1px;top:-1px;border-right:0;border-bottom:0"></span>
+              <span class="tick" style="right:-1px;top:-1px;border-left:0;border-bottom:0"></span>
+              <span class="tick" style="left:-1px;bottom:-1px;border-right:0;border-top:0"></span>
+              <span class="tick" style="right:-1px;bottom:-1px;border-left:0;border-top:0"></span>
+            </div>
+            <div class="headline-ov" id="headlineOv">Ninguém compra <u>high ticket</u> por desconto</div>
+            <div class="overlay-img" id="overlayImg" hidden>print_whatsapp_cliente.png<br>entra em 00:18,4</div>
+            <p class="cap s-classico" id="capPreview"><span class="w">high</span><span class="w on">ticket</span></p>
+            <div class="badge-frame"><span>legenda 68px</span><span>contorno 4px</span><span>-14 LUFS</span></div>
+          </div>
+
+          <div class="stage-side">
+            <div class="readout">
+              <div class="ro good"><b>0,15 s</b><span>cauda final</span></div>
+              <div class="ro good"><b>0,14 s</b><span>respiro médio</span></div>
+              <div class="ro"><b>18 car.</b><span>por legenda</span></div>
+              <div class="ro"><b>-1,4 dBTP</b><span>true peak</span></div>
+            </div>
+            <div class="mini">
+              <span>última frase</span>
+              <b style="font-size:12px; font-weight:500; font-family:inherit">“…e é por isso que high ticket <span style="color:var(--accent)">funciona</span>.”</b>
+              <div class="mono" style="color:var(--dim); font-size:11px; margin-top:6px">fim da fonação 01:14,42 · corte em 01:14,57</div>
+            </div>
+            <div class="mini">
+              <span>rosto</span>
+              <b style="font-size:12px; font-weight:500; font-family:inherit; color:var(--ok)">Travado em 42 amostras da timeline</b>
+              <div class="mono" style="color:var(--dim); font-size:11px; margin-top:6px">legenda reposicionada 1× em 00:31,2 (rosto desceu)</div>
+            </div>
+            <button class="btn ghost sm" style="align-self:flex-start">Ver os 3 pontos de emenda quadro a quadro</button>
+          </div>
+        </div>
+
+        <div class="tl">
+          <div class="tl-head">
+            <span>Forma de onda — corte pelo som, não pelo timestamp da transcrição</span>
+            <span class="legend">
+              <span><i style="background:#3d5170"></i>mantido</span>
+              <span><i style="background:#5a2a33"></i>removido</span>
+              <span><i style="background:var(--accent)"></i>emenda</span>
+            </span>
+          </div>
+          <div class="wave-wrap">
+            <canvas id="wave" height="104"></canvas>
+            <div class="playhead" id="playhead" style="left:16%"></div>
+          </div>
+          <div class="ruler mono"><span>00:00</span><span>00:18</span><span>00:37</span><span>00:56</span><span>01:14,6</span></div>
+
+          <div class="cuts" id="cuts"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><span class="step">09</span><h2>Áudio</h2><span class="hint">a voz manda</span></div>
+        <div class="pbody">
+          <div class="slider-row" style="margin-top:0">
+            <div class="mini"><span>loudness</span><b>-14 LUFS</b></div>
+            <div class="mini"><span>true peak</span><b>-1,5 dBTP</b></div>
+            <div class="mini"><span>música</span><b style="color:var(--dim)">desligada</b></div>
+          </div>
+          <p style="color:var(--dim); font-size:11.5px; margin-top:11px">Música só quando você pedir, sempre baixa e com ducking sob a fala. Ruído grave leve é removido; nada de filtro que mude a voz.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======= COLUNA DIREITA ======= -->
+    <div>
+      <section class="panel">
+        <div class="phead"><span class="step">01</span><h2>Conectar o seu Codex</h2><span class="hint">obrigatório</span></div>
+        <div class="pbody">
+          <div class="connect">
+            <div class="field mono"><label for="key">Chave</label><input id="key" type="password" value="sk-codex-••••••••••••••••4b7a" aria-label="Chave do Codex"></div>
+            <button class="btn" id="btnConn">Reconectar</button>
+          </div>
+          <div class="conn-state">
+            <span class="pill on">✓ conectado</span>
+            <span>conta <span class="mono">ricardo.castro1806</span></span>
+            <span>·</span>
+            <span>último teste <span class="mono">há 2 min</span></span>
+            <span>·</span>
+            <button class="btn ghost sm" style="padding:4px 9px">testar conexão</button>
+          </div>
+          <p style="color:var(--dim); font-size:11.5px; margin-top:10px">A chave fica no seu equipamento e é usada só para transcrever, analisar a fala e escrever headline. Nada de senha, cookie ou dado pessoal é guardado.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><span class="step">02</span><h2>Nível da edição</h2><span class="hint">muda o que o app monta</span></div>
+        <div class="pbody">
+          <div class="modes" id="modes">
+            <button class="mode" data-mode="simples" aria-pressed="false">
+              <h3>Simples <span class="lv">nv 1</span></h3>
+              <ul><li>Cortes limpos</li><li>Legendas sincronizadas</li><li>Headline opcional</li></ul>
+              <span class="need" style="color:var(--dim)">nada a enviar</span>
+            </button>
+            <button class="mode" data-mode="medio" aria-pressed="true">
+              <h3>Médio <span class="lv">nv 2</span></h3>
+              <ul><li>Tudo do Simples</li><li>Imagens entrando na fala</li><li>Hook reforçado</li></ul>
+              <span class="need">envie ou peça as imagens</span>
+            </button>
+            <button class="mode" data-mode="hard" aria-pressed="false">
+              <h3>Hard <span class="lv">nv 3</span></h3>
+              <ul><li>Tudo do Médio</li><li>Tela dividida por assunto</li><li>Ritmo de corte mais curto</li></ul>
+              <span class="need">envie o vídeo/imagem da divisão</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><span class="step">03</span><h2>Hook e headline</h2><span class="hint">método IG</span></div>
+        <div class="pbody">
+          <div class="seg" id="hlSeg">
+            <button aria-pressed="true" data-hl="app">O app escreve</button>
+            <button aria-pressed="false" data-hl="eu">Eu mando a frase</button>
+            <button aria-pressed="false" data-hl="off">Sem headline</button>
+          </div>
+          <div class="hook">
+            <span class="lab">Hook lido do seu vídeo · 00:00,0–00:03,1</span>
+            <p>“Você não perde venda por preço. Perde por <span style="color:var(--accent)">falta de percepção de valor</span>.”</p>
+          </div>
+          <div class="alt">
+            <button><span class="mono">A</span> Ninguém compra high ticket por desconto</button>
+            <button><span class="mono">B</span> O problema não é o preço. É o que ele acha que leva.</button>
+            <button><span class="mono">C</span> Barato não vende mentoria. Clareza vende.</button>
+          </div>
+          <div class="field" style="margin-top:11px"><label for="hlTxt">Headline</label><input id="hlTxt" value="Ninguém compra high ticket por desconto"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><span class="step">05</span><h2>Estilo da legenda</h2><span class="hint">4 opções · clique para ver no quadro</span></div>
+        <div class="pbody">
+          <div class="caps" id="caps">
+            <button class="capopt" data-style="s-classico" aria-pressed="true">
+              <span class="demo"><span class="flag">aprovado</span><span class="cap s-classico"><span class="w">high</span><span class="w on">ticket</span></span></span>
+              <span class="meta"><b>Clássico Ricardo</b><span>#FFFF00 · Arial Bold 68px · contorno 4px</span></span>
+            </button>
+            <button class="capopt" data-style="s-karaoke" aria-pressed="false">
+              <span class="demo"><span class="cap s-karaoke"><span class="w">high</span><span class="w on">ticket</span></span></span>
+              <span class="meta"><b>Karaokê</b><span>branco + palavra falada em amarelo</span></span>
+            </button>
+            <button class="capopt" data-style="s-bloco" aria-pressed="false">
+              <span class="demo"><span class="cap s-bloco"><span class="w">high</span><span class="w on">ticket</span></span></span>
+              <span class="meta"><b>Bloco impacto</b><span>caixa alta · fundo preto · chave amarela</span></span>
+            </button>
+            <button class="capopt" data-style="s-limpo" aria-pressed="false">
+              <span class="demo"><span class="cap s-limpo"><span class="w">high</span><span class="w on">ticket</span></span></span>
+              <span class="meta"><b>Limpo</b><span>branco · sem contorno · sombra leve</span></span>
+            </button>
+          </div>
+          <div class="slider-row">
+            <div class="mini"><span>palavras por evento</span><b>1 – 3</b></div>
+            <div class="mini"><span>altura</span><b>peito · 23%</b></div>
+            <div class="mini"><span>caracteres</span><b>≈ 18</b></div>
+          </div>
+          <p style="color:var(--dim); font-size:11.5px; margin-top:11px">Uma linha por vez, nunca dois eventos ao mesmo tempo. O app corrige a grafia do nicho — <span class="mono" style="color:var(--muted)">high ticket</span> sempre em duas palavras, sem hífen.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><span class="step">06</span><h2>Falas de destaque</h2><span class="hint">o que precisa ficar</span></div>
+        <div class="pbody">
+          <div class="chips" id="chips">
+            <span class="chip">high ticket <span class="mono">00:12,4</span><button aria-label="remover">×</button></span>
+            <span class="chip">não é sobre preço <span class="mono">00:41,9</span><button aria-label="remover">×</button></span>
+            <span class="chip">percepção de valor <span class="mono">00:53,2</span><button aria-label="remover">×</button></span>
+            <span class="chip muted">funciona <span class="mono">01:14,1</span><button aria-label="remover">×</button></span>
+          </div>
+          <div class="field"><label for="destaque">Nova</label><input id="destaque" placeholder="cole a frase — o app acha o trecho no áudio"></div>
+          <p style="color:var(--dim); font-size:11.5px; margin-top:9px">Fala marcada aqui nunca é cortada, ganha ênfase na legenda e vira gancho para imagem ou tela dividida.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panelImg">
+        <div class="phead"><span class="step">07</span><h2>Imagens</h2><span class="hint" id="imgHint">modo Médio e Hard</span></div>
+        <div class="pbody">
+          <div class="tabs" id="imgTabs">
+            <button class="tab" aria-selected="true" data-tab="upload">Enviar a minha</button>
+            <button class="tab" aria-selected="false" data-tab="pedir">Pedir para o app</button>
+          </div>
+          <div id="tabUpload">
+            <div class="drop"><b>Arraste PNG, JPG ou MP4</b><small>até 200 MB · o app encaixa no momento da fala</small></div>
+          </div>
+          <div id="tabPedir" hidden>
+            <div class="field" style="align-items:flex-start; margin-top:12px"><label for="prompt" style="margin-top:3px">Pedido</label><textarea id="prompt" rows="2" placeholder="ex.: print de conversa de cliente fechando mentoria, tela de celular, fundo escuro">gráfico simples de faturamento subindo, fundo escuro, sem texto</textarea></div>
+          </div>
+          <div class="slots">
+            <div class="slot"><div class="thumb">print_whatsapp.png</div><div class="info"><b>Entra em</b><span>00:18,4 · “ele fechou”</span></div></div>
+            <div class="slot"><div class="thumb gen">gerada pelo app</div><div class="info"><b>Entra em</b><span>00:36,0 · “o gráfico sobe”</span></div></div>
+            <div class="slot"><div class="thumb">printagenda.jpg</div><div class="info"><b>Entra em</b><span>00:57,8 · “agenda cheia”</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panelSplit">
+        <div class="phead"><span class="step">08</span><h2>Tela dividida</h2><span class="hint" id="splitHint">só no modo Hard</span></div>
+        <div class="pbody">
+          <div class="drop"><b>Envie o vídeo ou a imagem da divisão</b><small>o app abre a tela quando o assunto muda</small></div>
+          <div class="slider-row">
+            <div class="mini"><span>layout</span><b>topo 38%</b></div>
+            <div class="mini"><span>abre em</span><b>00:41,9</b></div>
+            <div class="mini"><span>duração</span><b>6,4 s</b></div>
+          </div>
+        </div>
+      </section>
+
+
+    </div>
+  </div>
+
+  <div class="wide">
+    <section class="panel">
+      <div class="phead"><span class="step">10</span><h2>Checklist antes de exportar</h2><span class="hint" style="color:var(--warn)">12 de 13 · 1 pendente</span></div>
+      <div class="pbody">
+        <div class="check">
+          <div class="ck"><i>✓</i>Palavra anterior completa</div>
+          <div class="ck"><i>✓</i>Última sílaba preservada</div>
+          <div class="ck"><i>✓</i>Respiro de 0,12–0,18 s</div>
+          <div class="ck"><i>✓</i>Entrada no onset real da voz</div>
+          <div class="ck"><i>✓</i>Sem delay escondido</div>
+          <div class="ck"><i>✓</i>Nenhuma palavra solta</div>
+          <div class="ck"><i>✓</i>Sem duas ideias iguais em sequência</div>
+          <div class="ck"><i>✓</i>Legenda colada na fala</div>
+          <div class="ck"><i>✓</i>Sem palavra duplicada ou ausente</div>
+          <div class="ck pend"><i>!</i>Legenda x rosto em 00:31,2 — revisar</div>
+          <div class="ck"><i>✓</i>Cabelo e queixo dentro do quadro</div>
+          <div class="ck"><i>✓</i>Frase final inteira</div>
+          <div class="ck"><i>✓</i>Cauda de 0,15 s no fim</div>
+        </div>
+      </div>
+    </section>
+
+    <div>
+      <section class="panel">
+        <div class="phead"><span class="step">11</span><h2>Custo deste vídeo</h2><span class="hint">1 revisão</span></div>
+        <div class="pbody">
+          <table class="cost">
+            <thead><tr><th>Item</th><th style="text-align:right">Valor</th></tr></thead>
+            <tbody>
+              <tr><td>Tokens de entrada · <span class="mono" style="color:var(--dim)">claude-opus-5</span></td><td>84.210</td></tr>
+              <tr><td>Tokens de saída</td><td>12.640</td></tr>
+              <tr><td>Tokens em cache</td><td>61.300</td></tr>
+              <tr><td>Transcrição · 1,24 min</td><td>US$ 0,008</td></tr>
+              <tr><td>Render · 2,8 min de processamento</td><td>US$ 0,041</td></tr>
+              <tr><td>Armazenamento · 0,6 GB/mês</td><td>US$ 0,013</td></tr>
+              <tr class="total"><td>Total estimado</td><td>US$ 0,37</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><span class="step">12</span><h2>Memória de aprovações</h2><span class="hint">não apaga</span></div>
+        <div class="pbody">
+          <div class="mem">
+            <div class="ok"><b>ok</b><span>Legenda amarela 68px, contorno 4px, altura do peito — aprovado em 12/ago</span></div>
+            <div class="ok"><b>ok</b><span>Respiro de 0,15 s depois da última palavra — “ficou legal” em 19/ago</span></div>
+            <div class="no"><b>não</b><span>Legenda subindo para cima do rosto</span></div>
+            <div class="no"><b>não</b><span>Transição decorativa entre cortes</span></div>
+            <div class="no"><b>não</b><span>Terminar o vídeo no word-end da transcrição</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="final">
+    <div>
+      <h2>Nada é renderizado antes do seu ok</h2>
+      <p>O app monta a prévia de 12 segundos com o primeiro corte, a emenda mais difícil e o fim da última frase. Aprovando, ele aplica o mesmo critério no vídeo inteiro e salva em <span class="mono" style="color:var(--muted)">/editados/REC_0412_high-ticket_EDITADO.mp4</span> — o original fica intacto.</p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost">Ver prévia</button>
+      <button class="btn">Aprovar e editar o vídeo cheio</button>
+    </div>
+  </section>
+
+  <footer>
+    <span>Protótipo de interface · nenhum vídeo foi processado</span><span>·</span>
+    <span>Dados da tela são de um exemplo</span><span>·</span>
+    <span class="mono">v0.1</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- dados do exemplo ---------- */
+  var DUR = 74.6;
+  var segs = [
+    {a:0,    b:6.42,  keep:true},
+    {a:6.42, b:8.08,  keep:false, why:"tentativa abandonada", quote:"eu acho que… não, deixa eu…"},
+    {a:8.08, b:19.10, keep:true},
+    {a:19.10,b:21.74, keep:false, why:"duas conclusões com o mesmo sentido", quote:"…ou seja, é valor. é valor mesmo."},
+    {a:21.74,b:33.55, keep:true},
+    {a:33.55,b:34.02, keep:false, why:"palavra solta antes da emenda", quote:"pra"},
+    {a:34.02,b:47.20, keep:true},
+    {a:47.20,b:49.96, keep:false, why:"recomeço de frase", quote:"o mentor… o mentor que…"},
+    {a:49.96,b:58.90, keep:true},
+    {a:58.90,b:60.35, keep:false, why:"pausa longa demais", quote:"—"},
+    {a:60.35,b:64.80, keep:true},
+    {a:64.80,b:67.10, keep:false, why:"ideia repetida", quote:"e aí funciona, funciona muito"},
+    {a:67.10,b:69.05, keep:true},
+    {a:69.05,b:70.20, keep:false, why:"palavra solta", quote:"então"},
+    {a:70.20,b:74.6,  keep:true}
+  ];
+
+  function tc(s){
+    var m = Math.floor(s/60), r = s - m*60;
+    return (m<10?"0":"")+m+":"+(r<10?"0":"")+r.toFixed(2).replace(".",",");
+  }
+
+  /* ---------- lista de cortes ---------- */
+  var box = document.getElementById("cuts");
+  var removed = segs.filter(function(s){return !s.keep;});
+  removed.forEach(function(s,i){
+    var el = document.createElement("button");
+    el.className = "cut";
+    el.setAttribute("aria-pressed", i===0 ? "true" : "false");
+    el.dataset.pos = ((s.a + s.b) / 2 / DUR * 100).toFixed(2);
+    el.innerHTML =
+      '<span class="tc">'+tc(s.a)+' → '+tc(s.b)+'</span>' +
+      '<span class="why">'+s.why+' <q>“'+s.quote+'”</q></span>' +
+      '<span class="br">+0,1'+(4+(i%3))+'s · onset '+tc(s.b+0.03)+'</span>';
+    el.addEventListener("click", function(){
+      Array.prototype.forEach.call(box.children, function(c){ c.setAttribute("aria-pressed","false"); });
+      el.setAttribute("aria-pressed","true");
+      document.getElementById("playhead").style.left = el.dataset.pos + "%";
+    });
+    box.appendChild(el);
+  });
+
+  /* ---------- forma de onda ---------- */
+  var cv = document.getElementById("wave");
+  function seeded(i){
+    var x = Math.sin(i*12.9898)*43758.5453;
+    return x - Math.floor(x);
+  }
+  function draw(){
+    var w = cv.clientWidth, h = 104, dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    var g = cv.getContext("2d");
+    g.setTransform(dpr,0,0,dpr,0,0);
+    g.clearRect(0,0,w,h);
+    var bw = 3, gap = 1.6, n = Math.floor(w/(bw+gap)), mid = h/2;
+    for (var i=0;i<n;i++){
+      var t = (i/n)*DUR;
+      var seg = null;
+      for (var k=0;k<segs.length;k++){ if (t>=segs[k].a && t<segs[k].b){ seg = segs[k]; break; } }
+      var env = 0.32 + 0.68*Math.abs(Math.sin(t*1.7));
+      var amp = (0.18 + 0.82*seeded(i)) * env * (mid-12);
+      if (seg && !seg.keep) amp *= 0.55;
+      g.fillStyle = (seg && !seg.keep) ? "#5a2a33" : "#3d5170";
+      g.fillRect(i*(bw+gap), mid-amp, bw, amp*2);
+    }
+    /* marcas de emenda */
+    g.fillStyle = "#FFE81A";
+    removed.forEach(function(s){
+      var x = s.b/DUR*w;
+      g.fillRect(x-0.75, 6, 1.5, h-12);
+      g.beginPath(); g.moveTo(x-4,6); g.lineTo(x+4,6); g.lineTo(x,12); g.closePath(); g.fill();
+    });
+    g.strokeStyle = "rgba(255,255,255,.06)";
+    g.beginPath(); g.moveTo(0,mid+0.5); g.lineTo(w,mid+0.5); g.stroke();
+  }
+  draw();
+  window.addEventListener("resize", draw);
+
+  /* ---------- estilo de legenda ---------- */
+  var capPreview = document.getElementById("capPreview");
+  document.getElementById("caps").addEventListener("click", function(e){
+    var b = e.target.closest(".capopt"); if(!b) return;
+    Array.prototype.forEach.call(this.children, function(c){ c.setAttribute("aria-pressed","false"); });
+    b.setAttribute("aria-pressed","true");
+    capPreview.className = "cap " + b.dataset.style;
+  });
+
+  /* ---------- modo ---------- */
+  var phone = document.getElementById("phone");
+  var panelImg = document.getElementById("panelImg");
+  var panelSplit = document.getElementById("panelSplit");
+  function setMode(m){
+    phone.classList.toggle("mode-hard", m==="hard");
+    document.getElementById("overlayImg").hidden = (m==="simples");
+    document.getElementById("splitBand").hidden = (m!=="hard");
+    document.getElementById("safe").style.top = (m==="hard") ? "42%" : "8%";
+    document.getElementById("safe").style.height = (m==="hard") ? "34%" : "47%";
+    document.getElementById("headlineOv").style.opacity = (m==="hard") ? "0" : "";
+    panelImg.style.opacity = (m==="simples") ? ".45" : "";
+    document.getElementById("imgHint").textContent = (m==="simples") ? "mude para Médio ou Hard" : "modo Médio e Hard";
+    panelSplit.style.opacity = (m==="hard") ? "" : ".45";
+    document.getElementById("splitHint").textContent = (m==="hard") ? "envie o material" : "só no modo Hard";
+  }
+  document.getElementById("modes").addEventListener("click", function(e){
+    var b = e.target.closest(".mode"); if(!b) return;
+    Array.prototype.forEach.call(this.children, function(c){ c.setAttribute("aria-pressed","false"); });
+    b.setAttribute("aria-pressed","true");
+    setMode(b.dataset.mode);
+  });
+  setMode("medio");
+
+  /* ---------- headline ---------- */
+  var hlTxt = document.getElementById("hlTxt");
+  var hlOv = document.getElementById("headlineOv");
+  function paintHeadline(){
+    var t = hlTxt.value.replace(/high ticket/i, "<u>high ticket</u>");
+    hlOv.innerHTML = t;
+  }
+  hlTxt.addEventListener("input", paintHeadline);
+  document.getElementById("hlSeg").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    Array.prototype.forEach.call(this.children, function(c){ c.setAttribute("aria-pressed","false"); });
+    b.setAttribute("aria-pressed","true");
+    hlOv.style.display = (b.dataset.hl === "off") ? "none" : "";
+    hlTxt.disabled = (b.dataset.hl === "off");
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".alt button"), function(b){
+    b.addEventListener("click", function(){
+      hlTxt.value = b.textContent.trim().replace(/^[ABC]\s*/, "");
+      paintHeadline();
+    });
+  });
+
+  /* ---------- abas de imagem ---------- */
+  document.getElementById("imgTabs").addEventListener("click", function(e){
+    var b = e.target.closest(".tab"); if(!b) return;
+    Array.prototype.forEach.call(this.children, function(c){ c.setAttribute("aria-selected","false"); });
+    b.setAttribute("aria-selected","true");
+    document.getElementById("tabUpload").hidden = (b.dataset.tab !== "upload");
+    document.getElementById("tabPedir").hidden = (b.dataset.tab !== "pedir");
+  });
+
+  /* ---------- chips ---------- */
+  document.getElementById("chips").addEventListener("click", function(e){
+    if (e.target.tagName === "BUTTON") e.target.closest(".chip").remove();
+  });
+  document.getElementById("destaque").addEventListener("keydown", function(e){
+    if (e.key !== "Enter" || !this.value.trim()) return;
+    var c = document.createElement("span");
+    c.className = "chip";
+    c.innerHTML = '<span></span> <span class="mono">buscando…</span><button aria-label="remover">×</button>';
+    c.firstChild.textContent = this.value.trim();
+    document.getElementById("chips").appendChild(c);
+    this.value = "";
+  });
+})();
+</script>
