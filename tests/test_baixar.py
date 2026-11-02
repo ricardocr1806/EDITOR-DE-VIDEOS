@@ -49,6 +49,21 @@ class TestLinks(unittest.TestCase):
         self.assertIn("privado", baixar.explicar_erro("This account is private"))
         self.assertIn("só foto", baixar.explicar_erro("There is no video in this post"))
 
+    def test_espera_e_tenta_de_novo_no_429(self):
+        respostas = [
+            baixar.Resultado("a", "erro", erro="HTTP Error 429: Too Many Requests"),
+            baixar.Resultado("a", "erro", erro="HTTP Error 429: Too Many Requests"),
+            baixar.Resultado("a", "baixado"),
+        ]
+        esperas = []
+        with mock.patch.object(baixar, "baixar_um", side_effect=respostas):
+            r = baixar.baixar_varios(["https://instagram.com/reel/A/"], Path("."), dormir=esperas.append)
+        self.assertEqual(r[0].status, "baixado")
+        self.assertEqual(esperas, list(baixar.ESPERAS_LIMITE[:2]))
+
+    def test_dica_do_429(self):
+        self.assertIn("10 minutos", baixar.explicar_erro("HTTP Error 429: Too Many Requests"))
+
     def test_lista_ignora_comentarios_e_duplicados(self):
         with tempfile.TemporaryDirectory() as d:
             lista = Path(d) / "links.txt"
@@ -56,7 +71,7 @@ class TestLinks(unittest.TestCase):
             links = baixar.ler_lista(lista)
             self.assertEqual(len(links), 2)
             with mock.patch.object(baixar, "baixar_um", return_value=baixar.Resultado("x", "baixado")) as m:
-                baixar.baixar_varios(links, Path(d))
+                baixar.baixar_varios(links, Path(d), dormir=lambda s: None)
             self.assertEqual(m.call_count, 1)
 
 

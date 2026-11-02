@@ -24,6 +24,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
@@ -38,6 +39,9 @@ _PADRAO_LINK = re.compile(
 
 # Trechos de erro do yt-dlp -> explicação em português e o que fazer.
 _DICAS_DE_ERRO = [
+    (("429", "too many requests"),
+     "O Instagram limitou os downloads por excesso de pedidos seguidos. Espere uns 10 minutos "
+     "e tente de novo esse link."),
     (("login", "log in", "cookies", "rate-limit", "rate limit", "not available"),
      "O Instagram pediu login para liberar esse vídeo. Rode de novo com "
      "--cookies-do-navegador chrome (ou firefox/edge/safari) com a conta logada "
@@ -270,16 +274,35 @@ def baixar_um(link: str, pasta: Path, cookies: Path | None = None,
     return resultado
 
 
+ESPERAS_LIMITE = (60, 180, 300)   # segundos entre tentativas quando o Instagram devolve 429
+PAUSA_ENTRE_LINKS = 4             # pedidos em rajada são o que dispara o 429
+
+
+def _limitado(r: Resultado) -> bool:
+    texto = (r.erro or "").lower()
+    return r.status == "erro" and ("429" in texto or "too many requests" in texto)
+
+
 def baixar_varios(links: Iterable[str], pasta: Path, cookies: Path | None = None,
-                  navegador: str | None = None) -> list[Resultado]:
+                  navegador: str | None = None, dormir=time.sleep) -> list[Resultado]:
     vistos: set[str] = set()
     resultados = []
-    for link in links:
+    for i, link in enumerate(links):
         chave = limpar_link(link)
         if chave in vistos:
             continue
         vistos.add(chave)
-        resultados.append(baixar_um(link, pasta, cookies, navegador))
+        if resultados:
+            dormir(PAUSA_ENTRE_LINKS)
+        r = baixar_um(link, pasta, cookies, navegador)
+        for espera in ESPERAS_LIMITE:
+            if not _limitado(r):
+                break
+            print(f"   Instagram pediu uma pausa; tentando {chave} de novo em {espera}s...",
+                  file=sys.stderr)
+            dormir(espera)
+            r = baixar_um(link, pasta, cookies, navegador)
+        resultados.append(r)
     return resultados
 
 
