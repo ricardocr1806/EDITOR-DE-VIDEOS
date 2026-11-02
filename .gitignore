@@ -1,0 +1,5 @@
+originais/
+editados/
+__pycache__/
+*.pyc
+cookies*.txt

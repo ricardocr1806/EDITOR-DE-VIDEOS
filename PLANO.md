@@ -4,6 +4,7 @@ Protótipo da interface: `prototipo/interface.html` (aprovar antes de codar o re
 
 ## 1. Pipeline de edição (núcleo)
 1. **Ingestão** — copia o bruto para `/originais`, nunca sobrescreve. Lê fps, resolução, duração.
+   O bruto também pode vir de um link do Instagram (`agente_instagram/`, ver README).
 2. **Transcrição** — Whisper com timestamps por palavra (via Codex do usuário).
 3. **Análise semântica** — marca erros, recomeços, frases abandonadas, palavras soltas,
    ideias repetidas e duas conclusões com o mesmo sentido.
