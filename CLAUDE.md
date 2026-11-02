@@ -18,7 +18,18 @@ Quando o usuário mandar links do Instagram ou pedir para baixar vídeos de lá:
 6. Se o Instagram pedir login (comum em servidor na nuvem), explique e peça um `cookies.txt` exportado
    do navegador; use `--cookies cookies.txt` e nunca faça commit desse arquivo.
 
-## Postar no TikTok
+## Postar no TikTok (caminho principal: Zernio, grátis até 2 contas)
+
+Agente: `python -m agente_tiktok.zernio` — publica direto, público e com legenda, ou agenda.
+Precisa de `ZERNIO_API_KEY` no ambiente (nunca peça no chat). Conta conectada: @isabeladuartesantos.
+
+1. `contas` para conferir a conta do TikTok conectada.
+2. `postar ARQUIVO --legenda "..."` publica na hora; `--agendar 2026-11-03T18:00` agenda (fuso de São Paulo).
+3. Legenda: sem @ e sem nomes de pessoas (o script já remove @); hashtags podem. O vídeo pode ter nomes.
+4. Confira `status_tiktok` e `link` no resultado e mande o link ao usuário. Se `erro` vier preenchido, explique.
+5. Só poste vídeo que o usuário tenha direito de usar.
+
+## Postar no TikTok pela API oficial (alternativa, só rascunho)
 
 Agente: `python -m agente_tiktok.postar` (API oficial do TikTok; app "Postar Videos", em Sandbox).
 Precisa das variáveis de ambiente `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` (nunca peça no chat).
