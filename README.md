@@ -8,6 +8,10 @@ Baixa reels, posts (inclusive carrossel), IGTV e stories para `originais/`, já 
 (melhor vídeo + melhor áudio, H.264/AAC sempre que existir). Ao lado de cada vídeo grava um
 `.json` com autor, legenda, link, data, resolução, fps e duração.
 
+**Sem a logo do Instagram:** o agente pega o arquivo original que o Instagram guarda no servidor,
+não o "Baixar" do app (é esse botão que carimba a logo e o @ no vídeo). Logo que já estava
+gravada na imagem pelo próprio autor continua no vídeo.
+
 ### Instalar
 
 ```bash

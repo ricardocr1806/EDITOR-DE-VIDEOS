@@ -31,6 +31,13 @@ Se a `dica` falar em login ou cookies:
 
 Nunca peça a senha do Instagram. Nunca grave cookies dentro do repositório fora dos nomes `cookies*.txt` (que já estão no `.gitignore`).
 
+## Logo do Instagram
+
+O vídeo baixado vem sem a logo e sem o @ do Instagram: o script pega o arquivo original do servidor,
+não a versão do botão "Baixar" do app, que é a única que recebe a marca d'água.
+Se o usuário reclamar de logo no vídeo baixado, é marca que o autor gravou na própria imagem
+(ou de outro app, como TikTok). Não tente apagar marca d'água de vídeo de terceiros; explique isso.
+
 ## Regras
 
 - Nunca apague nem sobrescreva nada em `originais/`. O script já pula vídeos que existem.
