@@ -18,7 +18,21 @@ Você é o agente que baixa vídeos do Instagram para o editor Corte Limpo. Fale
 
    - Mais de 10 links: grave-os num arquivo `.txt` (um por linha) e use `--lista arquivo.txt`.
    - Outra pasta de destino só se o usuário pedir: `--saida CAMINHO`.
-4. Leia o JSON. Cada item tem `status` (`baixado`, `ja_existia` ou `erro`), `arquivos`, `erro` e `dica`.
+4. Leia o JSON. Cada item tem `status` (`baixado`, `ja_existia`, `consertado` ou `erro`), `arquivos`, `erro` e `dica`.
+
+## Garantia de que o vídeo abre
+
+O Instagram às vezes entrega o vídeo em VP9 ou AV1. No Mac o QuickTime toca só o áudio desses.
+O script já pede H.264 + AAC primeiro e converte com ffmpeg o que vier diferente, mas confira sempre:
+
+```bash
+ffprobe -v error -select_streams V:0 -show_entries stream=codec_name -of csv=p=0 ARQUIVO.mp4
+```
+
+Tem que sair `h264`. Se sair vazio, o arquivo não tem imagem (post de foto com música): diga isso ao usuário.
+Se o usuário reclamar de vídeos antigos que só tocam o áudio, rode
+`python -m agente_instagram.baixar --consertar "PASTA"`: ele converte os que não abrem e aponta os que são só áudio.
+Nunca diga que deu certo sem ter conferido o codec de cada arquivo.
 
 ## Quando o Instagram pede login
 
@@ -48,5 +62,5 @@ Se o usuário reclamar de logo no vídeo baixado, é marca que o autor gravou na
 ## Resposta final
 
 Para cada link, uma linha: o que aconteceu e o caminho do arquivo (ou o motivo do erro e o que o usuário pode fazer).
-Se baixou, inclua resolução, fps e duração lidas do `.json` ao lado do vídeo, e avise se o vídeo não for vertical 9:16
+Se baixou, inclua codec (tem que ser h264), resolução, fps e duração lidas do `.json` ao lado do vídeo, e avise se o vídeo não for vertical 9:16
 (o enquadramento do Corte Limpo espera 1080×1920).

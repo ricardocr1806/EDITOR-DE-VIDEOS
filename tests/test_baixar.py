@@ -60,6 +60,62 @@ class TestLinks(unittest.TestCase):
             self.assertEqual(m.call_count, 1)
 
 
+def _gerar(destino, codec_video, codec_audio="aac", sem_video=False):
+    cmd = ["ffmpeg", "-y", "-v", "error"]
+    if not sem_video:
+        cmd += ["-f", "lavfi", "-i", "testsrc=size=360x640:rate=30:duration=1"]
+    cmd += ["-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-shortest"]
+    if not sem_video:
+        cmd += ["-c:v", codec_video, "-pix_fmt", "yuv420p"]
+        if codec_video == "libaom-av1":
+            cmd += ["-cpu-used", "8", "-crf", "50"]
+    cmd += ["-c:a", codec_audio, str(destino)]
+    subprocess.run(cmd, check=True)
+    return destino
+
+
+@unittest.skipUnless(shutil.which("ffmpeg"), "precisa do ffmpeg")
+class TestSoAudioNoMac(unittest.TestCase):
+    """O problema real: o Instagram manda VP9/AV1 e o QuickTime toca só o áudio."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_vp9_vira_h264(self):
+        f = _gerar(self.tmp / "vp9.mp4", "libvpx-vp9", "libopus")
+        self.assertFalse(baixar.abre_em_qualquer_lugar(baixar.inspecionar(f)))
+        self.assertTrue(baixar.garantir_compativel(f))
+        info = baixar.inspecionar(f)
+        self.assertEqual((info["video"], info["audio"]), ("h264", "aac"))
+        self.assertFalse((self.tmp / "vp9.convertendo.mp4").exists())
+
+    def test_av1_vira_h264(self):
+        f = _gerar(self.tmp / "av1.mp4", "libaom-av1")
+        self.assertTrue(baixar.garantir_compativel(f))
+        self.assertEqual(baixar.inspecionar(f)["video"], "h264")
+
+    def test_h264_nao_mexe(self):
+        f = _gerar(self.tmp / "ok.mp4", "libx264")
+        antes = f.stat().st_mtime_ns
+        self.assertFalse(baixar.garantir_compativel(f))
+        self.assertEqual(f.stat().st_mtime_ns, antes)
+
+    def test_so_audio_e_detectado(self):
+        f = _gerar(self.tmp / "audio.mp4", None, sem_video=True)
+        with self.assertRaises(baixar.SemVideo):
+            baixar.garantir_compativel(f)
+
+    def test_consertar_pasta(self):
+        _gerar(self.tmp / "a.mp4", "libvpx-vp9", "libopus")
+        _gerar(self.tmp / "b.mp4", "libx264")
+        _gerar(self.tmp / "c.mp4", None, sem_video=True)
+        status = {Path(r.link).name: r.status for r in baixar.consertar_pasta(self.tmp)}
+        self.assertEqual(status, {"a.mp4": "consertado", "b.mp4": "ja_existia", "c.mp4": "erro"})
+
+
 @unittest.skipUnless(shutil.which("ffmpeg"), "precisa do ffmpeg")
 class TestDownloadDeVerdade(unittest.TestCase):
     """Usa um vídeo local (file://) no lugar do Instagram para testar o caminho inteiro."""
@@ -102,6 +158,21 @@ class TestDownloadDeVerdade(unittest.TestCase):
         r2 = baixar.baixar_um(link, self.saida, validar=False)
         self.assertEqual(r2.status, "ja_existia")
         self.assertEqual(video.stat().st_mtime_ns, antes)
+
+    def test_download_em_vp9_sai_em_h264(self):
+        origem = _gerar(self.tmp / "fonte" / "reel_vp9.mp4", "libvpx-vp9", "libopus")
+        r = baixar.baixar_um(origem.as_uri(), self.saida, validar=False)
+        self.assertEqual(r.status, "baixado", r.erro)
+        video = Path(r.arquivos[0])
+        self.assertEqual(baixar.inspecionar(video)["video"], "h264")
+        self.assertTrue(json.loads(video.with_suffix(".json").read_text())["convertido_para_h264"])
+
+    def test_download_so_audio_vira_erro_explicado(self):
+        origem = _gerar(self.tmp / "fonte" / "foto_com_musica.mp4", None, sem_video=True)
+        r = baixar.baixar_um(origem.as_uri(), self.saida, validar=False)
+        self.assertEqual(r.status, "erro")
+        self.assertIn("foto", r.dica)
+        self.assertEqual(list(self.saida.glob("*.mp4")), [])
 
 
 if __name__ == "__main__":

@@ -12,6 +12,20 @@ Baixa reels, posts (inclusive carrossel), IGTV e stories para `originais/`, já 
 não o "Baixar" do app (é esse botão que carimba a logo e o @ no vídeo). Logo que já estava
 gravada na imagem pelo próprio autor continua no vídeo.
 
+**Sempre abre no Mac:** o Instagram às vezes entrega VP9/AV1, que o QuickTime toca só com áudio.
+O agente pede H.264 + AAC primeiro, confere cada arquivo com `ffprobe` e converte o que vier diferente.
+Para consertar uma pasta de vídeos já baixados: `python -m agente_instagram.baixar --consertar "PASTA"`.
+
+### No Mac, sem instalar o projeto
+
+`mac/Baixar-Videos-IG.command` é o mesmo agente num arquivo só. Ele instala o que faltar
+(Homebrew, yt-dlp, ffmpeg), conserta os vídeos que já estão em `~/Downloads/Vídeos IG`, pede os links,
+baixa, converte o que não abrir e mostra um resumo no final.
+
+```bash
+bash ~/Downloads/Baixar-Videos-IG.command
+```
+
 ### Instalar
 
 ```bash

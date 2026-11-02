@@ -6,8 +6,13 @@ Uso:
     python -m agente_instagram.baixar URL --cookies-do-navegador chrome
     python -m agente_instagram.baixar URL --json     # saída para outro programa ler
 
+    python -m agente_instagram.baixar --consertar "PASTA"  # conserta .mp4 que não abrem
+
 Regras (mesmas da ingestão do Corte Limpo):
 - O arquivo baixado nunca é sobrescrito. Se o mesmo vídeo já existe, ele é pulado.
+- Todo vídeo sai em H.264 + AAC, que abre em qualquer player (QuickTime, iPhone, Windows,
+  editores). O Instagram às vezes entrega VP9/AV1: aí o QuickTime toca só o áudio. O agente
+  confere cada arquivo com ffprobe e converte o que não estiver em H.264.
 - Cada vídeo ganha um .json ao lado com autor, legenda, link, fps, resolução e duração.
 """
 
@@ -60,7 +65,7 @@ class _Silencioso:
 @dataclass
 class Resultado:
     link: str
-    status: str  # "baixado" | "ja_existia" | "erro"
+    status: str  # "baixado" | "ja_existia" | "consertado" | "erro"
     arquivos: list[str] = field(default_factory=list)
     erro: str | None = None
     dica: str | None = None
@@ -114,11 +119,68 @@ def medir_video(arquivo: Path) -> dict[str, Any]:
     }
 
 
+class SemVideo(Exception):
+    """O arquivo não tem faixa de vídeo (post de foto com música, ou download incompleto)."""
+
+
+def inspecionar(arquivo: Path) -> dict[str, str | None]:
+    """Codec de vídeo, formato de pixel e codec de áudio do arquivo."""
+    cmd = ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,pix_fmt",
+           "-of", "json", str(arquivo)]
+    try:
+        dados = json.loads(subprocess.run(cmd, capture_output=True, text=True, check=True).stdout)
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        return {"video": None, "pix_fmt": None, "audio": None}
+    streams = dados.get("streams") or []
+    video = next((s for s in streams if s.get("codec_type") == "video"
+                  and s.get("codec_name") not in ("mjpeg", "png")), {})  # capa embutida não conta
+    audio = next((s for s in streams if s.get("codec_type") == "audio"), {})
+    return {"video": video.get("codec_name"), "pix_fmt": video.get("pix_fmt"),
+            "audio": audio.get("codec_name")}
+
+
+def abre_em_qualquer_lugar(info: dict[str, str | None]) -> bool:
+    return (info["video"] == "h264" and info["pix_fmt"] in ("yuv420p", "yuvj420p")
+            and info["audio"] in (None, "aac"))
+
+
+def garantir_compativel(arquivo: Path) -> bool:
+    """Deixa o .mp4 em H.264 + AAC. Devolve True se precisou converter.
+
+    Converte para um arquivo temporário, confere o resultado e só então troca o original.
+    Levanta SemVideo se o arquivo não tiver imagem.
+    """
+    info = inspecionar(arquivo)
+    if not info["video"]:
+        raise SemVideo(f"{arquivo.name} não tem vídeo, só áudio")
+    if abre_em_qualquer_lugar(info):
+        return False
+    video_ok = info["video"] == "h264" and info["pix_fmt"] in ("yuv420p", "yuvj420p")
+    temp = arquivo.with_name(arquivo.stem + ".convertendo.mp4")
+    cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(arquivo), "-map", "0:v:0", "-map", "0:a:0?"]
+    cmd += (["-c:v", "copy"] if video_ok else
+            ["-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p"])
+    cmd += ["-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(temp)]
+    try:
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        if not abre_em_qualquer_lugar(inspecionar(temp)):
+            raise RuntimeError(f"a conversão de {arquivo.name} não ficou em H.264")
+    except subprocess.CalledProcessError as exc:
+        temp.unlink(missing_ok=True)
+        raise RuntimeError(f"ffmpeg não conseguiu converter {arquivo.name}: {exc.stderr.strip()}")
+    except Exception:
+        temp.unlink(missing_ok=True)
+        raise
+    temp.replace(arquivo)
+    return True
+
+
 def _opcoes_ytdlp(pasta: Path, cookies: Path | None, navegador: str | None) -> dict[str, Any]:
     opcoes: dict[str, Any] = {
-        # Melhor vídeo + melhor áudio, juntos num .mp4. Prefere H.264/AAC para editar sem dor.
-        "format": "bv*+ba/b",
-        "format_sort": ["res", "fps", "vcodec:h264", "acodec:aac"],
+        # H.264 + AAC primeiro (abre em qualquer lugar); só cai para outro codec se não houver,
+        # e nesse caso garantir_compativel() converte depois.
+        "format": "bv*[vcodec^=avc1]+ba[acodec^=mp4a]/b[vcodec^=avc1]/bv*+ba/b",
+        "format_sort": ["vcodec:h264", "res", "fps", "acodec:aac"],
         "merge_output_format": "mp4",
         "outtmpl": str(pasta / "instagram_%(uploader_id,uploader|autor)s_%(id)s.%(ext)s"),
         "restrictfilenames": True,
@@ -137,7 +199,7 @@ def _opcoes_ytdlp(pasta: Path, cookies: Path | None, navegador: str | None) -> d
     return opcoes
 
 
-def _salvar_ficha(arquivo: Path, info: dict[str, Any], link: str) -> None:
+def _salvar_ficha(arquivo: Path, info: dict[str, Any], link: str, convertido: bool) -> None:
     ficha = {
         "link": link,
         "id": info.get("id"),
@@ -148,6 +210,7 @@ def _salvar_ficha(arquivo: Path, info: dict[str, Any], link: str) -> None:
         "curtidas": info.get("like_count"),
         "comentarios": info.get("comment_count"),
         "arquivo": arquivo.name,
+        "convertido_para_h264": convertido,
         **medir_video(arquivo),
     }
     arquivo.with_suffix(".json").write_text(
@@ -177,15 +240,28 @@ def baixar_um(link: str, pasta: Path, cookies: Path | None = None,
             for entrada in entradas:
                 destino = Path(ydl.prepare_filename(entrada)).with_suffix(".mp4")
                 if destino.exists():
+                    # Já baixado antes: só confere se abre (versões antigas podiam vir em VP9/AV1).
+                    if garantir_compativel(destino) and resultado.status == "ja_existia":
+                        resultado.status = "consertado"
                     resultado.arquivos.append(str(destino))
                     continue
                 final = ydl.process_ie_result(entrada, download=True)
                 baixado = Path(final.get("filepath") or destino)
                 if not baixado.exists():
                     baixado = destino
-                _salvar_ficha(baixado, final, link)
+                try:
+                    convertido = garantir_compativel(baixado)
+                except SemVideo:
+                    baixado.unlink(missing_ok=True)
+                    raise
+                _salvar_ficha(baixado, final, link, convertido)
                 resultado.arquivos.append(str(baixado))
                 resultado.status = "baixado"
+    except SemVideo:
+        return Resultado(link, "erro", arquivos=resultado.arquivos,
+                         erro="O arquivo veio só com áudio.",
+                         dica="Esse post provavelmente é foto (ou carrossel de fotos) com música, "
+                              "não um vídeo. Abra o link no Instagram para conferir.")
     except Exception as exc:  # yt-dlp levanta vários tipos; todos viram erro explicado
         mensagem = re.sub(r"\x1b\[[0-9;]*m", "", str(exc)).replace("ERROR: ", "")
         mensagem = mensagem.split("; please report this issue", 1)[0].strip()
@@ -207,8 +283,26 @@ def baixar_varios(links: Iterable[str], pasta: Path, cookies: Path | None = None
     return resultados
 
 
+def consertar_pasta(pasta: Path) -> list[Resultado]:
+    """Confere todos os .mp4 de uma pasta e converte para H.264 os que não abrem."""
+    resultados = []
+    for arquivo in sorted(pasta.glob("*.mp4")):
+        if arquivo.name.endswith(".convertendo.mp4"):
+            continue
+        try:
+            status = "consertado" if garantir_compativel(arquivo) else "ja_existia"
+            resultados.append(Resultado(str(arquivo), status, arquivos=[str(arquivo)]))
+        except SemVideo:
+            resultados.append(Resultado(str(arquivo), "erro", erro="Arquivo só com áudio.",
+                                        dica="Baixe de novo pelo link; se repetir, o post é foto com música."))
+        except Exception as exc:
+            resultados.append(Resultado(str(arquivo), "erro", erro=str(exc),
+                                        dica="Apague esse arquivo e baixe de novo pelo link."))
+    return resultados
+
+
 def _imprimir_resumo(resultados: list[Resultado]) -> None:
-    icones = {"baixado": "OK ", "ja_existia": "== ", "erro": "XX "}
+    icones = {"baixado": "OK ", "consertado": "FIX", "ja_existia": "== ", "erro": "XX "}
     for r in resultados:
         print(f"{icones[r.status]}{r.link}")
         for a in r.arquivos:
@@ -217,8 +311,8 @@ def _imprimir_resumo(resultados: list[Resultado]) -> None:
             print(f"     erro: {r.erro}")
             print(f"     o que fazer: {r.dica}")
     contagem = {s: sum(r.status == s for r in resultados) for s in icones}
-    print(f"\n{contagem['baixado']} baixado(s), {contagem['ja_existia']} já existia(m), "
-          f"{contagem['erro']} com erro.")
+    print(f"\n{contagem['baixado']} baixado(s), {contagem['consertado']} consertado(s), "
+          f"{contagem['ja_existia']} já ok, {contagem['erro']} com erro.")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -233,8 +327,21 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cookies", type=Path, help="arquivo cookies.txt de uma conta logada")
     p.add_argument("--cookies-do-navegador", metavar="NAVEGADOR",
                    help="usa o login do navegador: chrome, firefox, edge, safari, brave...")
+    p.add_argument("--consertar", type=Path, metavar="PASTA",
+                   help="confere os .mp4 da pasta e converte para H.264 os que não abrem")
     p.add_argument("--json", action="store_true", help="imprime o resultado em JSON")
     args = p.parse_args(argv)
+
+    if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
+        p.error("o ffmpeg não está instalado (Mac: brew install ffmpeg)")
+
+    if args.consertar:
+        resultados = consertar_pasta(args.consertar)
+        if args.json:
+            print(json.dumps([asdict(r) for r in resultados], ensure_ascii=False, indent=2))
+        else:
+            _imprimir_resumo(resultados)
+        return 1 if any(r.status == "erro" for r in resultados) else 0
 
     links = list(args.links)
     if args.lista:
