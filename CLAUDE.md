@@ -17,3 +17,16 @@ Quando o usuário mandar links do Instagram ou pedir para baixar vídeos de lá:
    em Network access do ambiente (ou escolher acesso total) e abrir uma sessão nova.
 6. Se o Instagram pedir login (comum em servidor na nuvem), explique e peça um `cookies.txt` exportado
    do navegador; use `--cookies cookies.txt` e nunca faça commit desse arquivo.
+
+## Postar no TikTok
+
+Agente: `python -m agente_tiktok.postar` (API oficial do TikTok; app "Postar Videos", em Sandbox).
+Precisa das variáveis de ambiente `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` (nunca peça no chat).
+
+1. Primeira vez numa sessão sem token: rode `link-autorizacao`, mande o link ao usuário, peça para ele
+   autorizar e colar de volta o endereço inteiro da barra (vai mostrar erro 404 — é normal). Rode
+   `trocar-codigo "URL"`. Se existir `TIKTOK_REFRESH_TOKEN`, não precisa autorizar de novo.
+2. Postar: `postar ARQUIVO --legenda "..." --modo rascunho` (padrão; o usuário toca em Publicar no app)
+   ou `--modo direto` (enquanto o app não for aprovado pelo TikTok, só sai como privado/SELF_ONLY).
+3. Confira o `status` no resultado: `SEND_TO_USER_INBOX` (rascunho entregue) ou `PUBLISH_COMPLETE`.
+4. Só poste vídeo que seja do usuário ou que ele tenha direito de usar. Nunca imprima tokens.
