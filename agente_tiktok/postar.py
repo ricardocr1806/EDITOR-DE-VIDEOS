@@ -148,7 +148,8 @@ def _api(caminho: str, corpo: dict[str, Any]) -> dict[str, Any]:
     dados = r.json()
     erro = dados.get("error") or {}
     if erro.get("code") not in (None, "ok"):
-        raise ErroTikTok(f"{erro.get('code')}: {erro.get('message')}")
+        dica = DICAS_ERRO.get(erro.get("code"), "")
+        raise ErroTikTok(f"{erro.get('code')}: {erro.get('message')}" + (f"\n{dica}" if dica else ""))
     return dados.get("data") or {}
 
 
@@ -212,6 +213,16 @@ def postar(arquivo: Path, legenda: str, modo: str = "rascunho", privacidade: str
         resultado.update(acompanhar(dados["publish_id"]))
     return resultado
 
+
+DICAS_ERRO = {
+    "unaudited_client_can_only_post_to_private_accounts":
+        "App ainda não aprovado pelo TikTok só posta direto em conta privada. Use --modo rascunho "
+        "ou peça a aprovação (Submit for review) na aba Produção.",
+    "spam_risk_too_many_posts": "Limite diário de posts pela API atingido. Tente amanhã.",
+    "spam_risk_user_banned_from_posting": "A conta está impedida de postar pelo TikTok.",
+    "access_token_invalid": "Autorização expirada ou revogada. Gere um novo link de autorização.",
+    "scope_not_authorized": "A conta não autorizou essa permissão. Autorize de novo.",
+}
 
 FINAIS = {"PUBLISH_COMPLETE", "SEND_TO_USER_INBOX", "FAILED"}
 

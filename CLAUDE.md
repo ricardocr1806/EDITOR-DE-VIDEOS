@@ -26,7 +26,10 @@ Precisa das variáveis de ambiente `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` 
 1. Primeira vez numa sessão sem token: rode `link-autorizacao`, mande o link ao usuário, peça para ele
    autorizar e colar de volta o endereço inteiro da barra (vai mostrar erro 404 — é normal). Rode
    `trocar-codigo "URL"`. Se existir `TIKTOK_REFRESH_TOKEN`, não precisa autorizar de novo.
-2. Postar: `postar ARQUIVO --legenda "..." --modo rascunho` (padrão; o usuário toca em Publicar no app)
-   ou `--modo direto` (enquanto o app não for aprovado pelo TikTok, só sai como privado/SELF_ONLY).
+2. Postar: `postar ARQUIVO --modo rascunho` (padrão). O rascunho chega nas notificações do TikTok e o
+   usuário toca em Publicar. A API NÃO leva legenda no rascunho: escreva a legenda e mande no chat
+   para ele colar. `--modo direto --legenda "..."` só funciona depois que o TikTok aprovar o app
+   (Submit for review); antes disso o TikTok recusa conta pública (unaudited_client_can_only_post_to_private_accounts).
+   Legenda: sem @ e sem nomes de pessoas (preferência do usuário); hashtags podem.
 3. Confira o `status` no resultado: `SEND_TO_USER_INBOX` (rascunho entregue) ou `PUBLISH_COMPLETE`.
 4. Só poste vídeo que seja do usuário ou que ele tenha direito de usar. Nunca imprima tokens.
