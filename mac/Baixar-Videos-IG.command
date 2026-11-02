@@ -34,7 +34,8 @@ preparar() {
     brew install yt-dlp
   else
     # O Instagram muda o site com frequência; yt-dlp desatualizado é a causa nº 1 de erro.
-    brew upgrade yt-dlp >/dev/null 2>&1
+    echo "Atualizando o yt-dlp (se perguntar [y/n], aperte só a tecla y)..."
+    HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade yt-dlp 2>/dev/null || true
   fi
   if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
     echo "Se perguntar [y/n], aperte só a tecla y."
