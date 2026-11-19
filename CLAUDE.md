@@ -44,3 +44,26 @@ Precisa das variáveis de ambiente `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET` 
    Legenda: sem @ e sem nomes de pessoas (preferência do usuário); hashtags podem.
 3. Confira o `status` no resultado: `SEND_TO_USER_INBOX` (rascunho entregue) ou `PUBLISH_COMPLETE`.
 4. Só poste vídeo que seja do usuário ou que ele tenha direito de usar. Nunca imprima tokens.
+
+## Metricool (agendar no Instagram)
+
+Marca: blogId `7090035`, label `ricardocastrocr`, Instagram `@ricardocastrocr`,
+fuso `America/Sao_Paulo`. Plano Free: teto de 20 posts/mês.
+
+**Como o vídeo entra:** o campo `media` do `createScheduledPost` aceita **só URL pública**
+(ou link do Drive/Dropbox, e no caso do Drive a conta precisa estar vinculada dentro do
+Metricool). Não existe upload de arquivo local pelo conector. Os dois caminhos de upload do
+projeto têm teto de 10 MB, então arquivo maior sobe à mão pelo navegador, no Drive, marcado
+como "qualquer pessoa com o link". Abaixo de 25 MB o Google não mostra a tela de confirmação
+que quebra o download direto — por isso a versão LEVE tem 18,4 MB.
+
+**Plano B:** `/postar-instagram` pelo navegador no Mac, já validado. Não depende de URL pública.
+
+### Estado atual
+
+- O primeiro reel é **de TESTE**: `ricardo_split_LEVE.mp4` (18,4 MB), legenda exatamente
+  `Segue @ricardocastrocr`, Instagram como Reels. Por ser teste, horário não importa —
+  vale a velocidade, não o pico de audiência.
+- Parado esperando a URL pública do vídeo. Sem ela o Metricool recusa (Reels exige vídeo).
+- Melhor horário pela própria conta, para quando valer alcance: 10h, qui/sex (6.275 / 6.734).
+  A faixa das 22h–23h vale ~960, o pior da semana.
