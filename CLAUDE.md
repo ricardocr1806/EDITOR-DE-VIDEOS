@@ -18,6 +18,19 @@ Quando o usuário mandar links do Instagram ou pedir para baixar vídeos de lá:
 6. Se o Instagram pedir login (comum em servidor na nuvem), explique e peça um `cookies.txt` exportado
    do navegador; use `--cookies cookies.txt` e nunca faça commit desse arquivo.
 
+## Achar os virais de um perfil
+
+Agente: `python -m agente_instagram.virais PERFIL [PERFIL ...]`. Lê os reels recentes de cada
+perfil, calcula a mediana da própria conta e ranqueia pelo **múltiplo** (views ÷ mediana):
+acima de 3x é sinal, abaixo de 1,5x é dia normal e não ensina nada. Grava
+`virais/capturado.tsv` no formato que o `swipe.py` da skill `/ig-viral` lê e baixa os
+melhores para `originais/`.
+
+- `--analisar N` reels lidos por perfil (padrão 18), `--baixar N` quantos baixar (padrão 3, 0 = nenhum).
+- **Listar perfil exige conta logada.** Em sessão na nuvem o Instagram responde 429 ou manda
+  para o login: isso é esperado, não é bug. Rode no Mac com `--cookies-do-navegador chrome`,
+  ou passe `--cookies cookies.txt` aqui.
+
 ## Postar no TikTok (caminho principal: Zernio, grátis até 2 contas)
 
 Agente: `python -m agente_tiktok.zernio` — publica direto, público e com legenda, ou agenda.

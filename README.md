@@ -69,6 +69,18 @@ O mesmo vídeo nunca é baixado duas vezes nem sobrescrito: o nome do arquivo é
 
 Baixe só vídeos seus ou que você tem permissão de usar.
 
+## Agente que acha os virais de um perfil
+
+```bash
+python -m agente_instagram.virais pablomarcal1 alfredosoares --cookies-do-navegador chrome
+python -m agente_instagram.virais --lista perfis.txt --analisar 24 --baixar 5
+python -m agente_instagram.virais PERFIL --baixar 0      # só a lista, sem baixar
+```
+
+Ranqueia pelo múltiplo sobre a mediana da própria conta (views cruas não são prova),
+grava `virais/capturado.tsv` para o `swipe.py` da skill `/ig-viral` e baixa os melhores
+em `originais/`. Listar perfil exige conta logada: use `--cookies-do-navegador` ou `--cookies`.
+
 ### Testes
 
 ```bash
